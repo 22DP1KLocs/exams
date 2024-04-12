@@ -1,4 +1,5 @@
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 class Product {
@@ -118,8 +119,12 @@ public class Shop {
         products.add(new Product("Chocolate", 2.99, "Snack"));
         products.add(new Product("Cookies", 1.79, "Snack"));
 
-        // Load messages properties file based on default locale
-        messages = ResourceBundle.getBundle("messages", Locale.getDefault());
+        // Load messages properties file based on default locale with UTF-8 encoding
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("messages.properties")) {
+            messages = new PropertyResourceBundle(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            System.err.println("Error loading messages properties file: " + e.getMessage());
+        }
 
         scanner = new Scanner(System.in);
     }
@@ -149,7 +154,7 @@ public class Shop {
         System.out.println("2. Spanish");
         System.out.println("3. Latvian");
         System.out.print("Enter your choice: ");
-        int choice = scanner.nextInt();
+        int choice = getValidIntegerInput();
         switch (choice) {
             case 1:
                 return Locale.ENGLISH;
@@ -160,6 +165,17 @@ public class Shop {
             default:
                 System.out.println("Invalid choice! Defaulting to English.");
                 return Locale.ENGLISH;
+        }
+    }
+
+    private int getValidIntegerInput() {
+        while (true) {
+            try {
+                int input = Integer.parseInt(scanner.nextLine());
+                return input;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input! Please enter a number.");
+            }
         }
     }
 
@@ -178,7 +194,8 @@ public class Shop {
             System.out.println("6. " + shop.messages.getString("menu.option.exit"));
             System.out.println("-----------------------------");
             System.out.print(shop.messages.getString("menu.choicePrompt"));
-            int choice = shop.scanner.nextInt();
+
+            int choice = shop.getValidIntegerInput();
 
             switch (choice) {
                 case 1:
@@ -187,11 +204,11 @@ public class Shop {
                 case 2:
                     shop.displayAvailableProducts();
                     System.out.print(shop.messages.getString("menu.choiceProduct"));
-                    int addIndex = shop.scanner.nextInt();
+                    int addIndex = shop.getValidIntegerInput();
                     if (shop.isValidIndex(addIndex)) {
                         Product productToAdd = shop.getProducts().get(addIndex - 1);
                         System.out.print(shop.messages.getString("menu.choiceQuantity"));
-                        int quantity = shop.scanner.nextInt();
+                        int quantity = shop.getValidIntegerInput();
                         cart.addToCart(productToAdd, quantity);
                         System.out.println(productToAdd.getName() + " " + shop.messages.getString("menu.option.addedToCart"));
                     } else {
@@ -209,11 +226,11 @@ public class Shop {
                             System.out.println((index++) + ". " + product.getName() + " - Quantity: " + quantity);
                         }
                         System.out.print(shop.messages.getString("menu.choiceProduct"));
-                        int removeIndex = shop.scanner.nextInt();
+                        int removeIndex = shop.getValidIntegerInput();
                         if (removeIndex >= 1 && removeIndex <= cartItems.size()) {
                             Product productToRemove = new ArrayList<>(cartItems.keySet()).get(removeIndex - 1);
                             System.out.print("Enter the quantity to remove: ");
-                            int removeQuantity = shop.scanner.nextInt();
+                            int removeQuantity = shop.getValidIntegerInput();
                             cart.removeFromCart(productToRemove, removeQuantity);
                             System.out.println(productToRemove.getName() + " " + shop.messages.getString("menu.option.removedFromCart"));
                         } else {
